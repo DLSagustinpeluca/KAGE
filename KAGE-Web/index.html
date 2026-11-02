@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KAGE: La noche de los yokai. Un juego de mesa inspirado en el folclore japonés.">
+  <title>KAGE | La noche de los yokai</title>
+  <style>
+    :root {
+      --night: #100c0c;
+      --panel: #191111;
+      --red: #a5222c;
+      --red-bright: #d13b3e;
+      --gold: #d9b681;
+      --paper: #f2dfc5;
+      --muted: #c9b7a5;
+      --line: rgba(199, 133, 75, .45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 85px; }
+    body {
+      background: var(--night);
+      color: var(--paper);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+
+    /* Barra superior */
+    .site-header {
+      position: sticky; top: 0; z-index: 20;
+      min-height: 76px; padding: 8px clamp(16px, 5vw, 70px);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      background: rgba(13, 9, 9, .94);
+      border-bottom: 1px solid var(--red);
+      backdrop-filter: blur(12px);
+    }
+    .brand { display: block; width: 76px; flex: 0 0 auto; }
+    .brand img {
+      display: block; width: 100%; height: 58px; object-fit: contain;
+      border-radius: 2px;
+    }
+    nav { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 2.5vw, 34px); }
+    nav a { color: var(--gold); font-style: italic; transition: color .2s; }
+    nav a:hover, nav a:focus-visible { color: #fff; }
+    .header-mark { color: var(--red-bright); font-size: 2rem; line-height: 1; }
+
+    /* Portada: paisaje ilustrado con capas CSS, luna y niebla */
+    .hero {
+      min-height: min(820px, 88svh); min-height: min(820px, 88vh);
+      position: relative; isolation: isolate; overflow: hidden;
+      padding: 70px 20px 100px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      text-align: center;
+      background:
+        radial-gradient(ellipse at 50% 28%, rgba(176, 28, 35, .28), transparent 35%),
+        linear-gradient(180deg, #1b1011 0%, #2a1416 40%, #171011 78%, var(--night) 100%);
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 10% 85%, rgba(139, 33, 28, .45), transparent 26%),
+        radial-gradient(ellipse at 92% 74%, rgba(130, 28, 25, .42), transparent 25%),
+        repeating-linear-gradient(172deg, transparent 0 70px, rgba(218, 169, 112, .035) 72px, transparent 74px);
+    }
+    .moon {
+      position: absolute; z-index: -1; top: 7%; left: 50%; transform: translateX(-50%);
+      width: clamp(190px, 29vw, 340px); aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle at 38% 35%, #d74b40, #a91f28 60%, #64151d 100%);
+      box-shadow: 0 0 45px rgba(192, 32, 38, .38), 0 0 130px rgba(174, 29, 34, .16);
+      opacity: .88;
+    }
+    .moon::after {
+      content: ""; position: absolute; inset: 10%; border-radius: 50%;
+      background: repeating-radial-gradient(ellipse at 60% 40%, transparent 0 19px, rgba(66, 12, 18, .12) 20px 22px, transparent 23px 37px);
+      mix-blend-mode: multiply;
+    }
+    .torii {
+      position: absolute; z-index: -1; top: 18%; left: 50%; transform: translateX(-50%);
+      width: clamp(250px, 44vw, 540px); height: 230px; opacity: .9;
+      filter: drop-shadow(0 8px 6px rgba(0,0,0,.45));
+    }
+    .torii::before {
+      content: ""; position: absolute; top: 8%; left: -4%; width: 108%; height: 24px;
+      background: #100b0b; border-radius: 2px 2px 12px 12px;
+      clip-path: polygon(0 0, 100% 0, 96% 70%, 75% 100%, 25% 100%, 4% 70%);
+    }
+    .torii::after {
+      content: ""; position: absolute; top: 20%; left: 12%; width: 76%; height: 18px;
+      background: #100b0b; box-shadow: 0 28px 0 -2px #100b0b;
+    }
+    .torii .post { position: absolute; top: 18%; height: 77%; width: 22px; background: #100b0b; }
+    .torii .post.left { left: 19%; transform: rotate(1deg); }
+    .torii .post.right { right: 19%; transform: rotate(-1deg); }
+    .mist {
+      position: absolute; z-index: -1; left: -15%; right: -15%; bottom: 5%; height: 36%;
+      background: radial-gradient(ellipse at 30% 60%, rgba(199, 173, 154, .18), transparent 45%),
+                  radial-gradient(ellipse at 70% 40%, rgba(211, 187, 171, .16), transparent 40%),
+                  linear-gradient(180deg, transparent, rgba(180, 151, 137, .08), transparent);
+      filter: blur(15px); animation: drift 12s ease-in-out infinite alternate;
+    }
+    .mountains {
+      position: absolute; z-index: -1; bottom: 0; left: 0; width: 100%; height: 29%;
+      background: linear-gradient(145deg, transparent 20%, #100b0b 20.5% 31%, transparent 31.5%),
+                  linear-gradient(215deg, transparent 17%, #120b0c 17.5% 35%, transparent 35.5%),
+                  linear-gradient(180deg, transparent, #0c0909 88%);
+      opacity: .9;
+    }
+    .hero-content { position: relative; z-index: 2; width: min(760px, 100%); padding-top: 80px; }
+    .eyebrow { color: var(--gold); letter-spacing: .28em; text-transform: uppercase; font-size: .82rem; margin-bottom: 15px; }
+    .main-logo {
+      display: block; width: min(78vw, 510px); max-height: 390px; object-fit: contain;
+      margin: 0 auto 18px; filter: drop-shadow(0 12px 25px rgba(0,0,0,.72));
+      animation: fade-in 1s ease-out both;
+    }
+    .hero h1 { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .hero h2 { color: var(--gold); font-size: clamp(1.1rem, 2.8vw, 1.7rem); letter-spacing: .17em; font-weight: normal; margin: 5px 0 12px; text-shadow: 0 2px 12px #000; }
+    .hero p:not(.eyebrow) { color: #f3dfc9; max-width: 620px; margin: 0 auto 25px; text-shadow: 0 2px 9px #000; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 16px;
+      padding: 13px 28px; background: var(--red); color: #fff0d8;
+      border: 1px solid var(--gold); cursor: pointer; transition: .25s;
+      box-shadow: 0 0 28px rgba(142, 26, 33, .3);
+    }
+    .button:hover { background: #c1323b; transform: translateY(-3px); }
+    .brush-line { width: min(800px, 85%); height: 2px; margin: 0 auto; background: linear-gradient(90deg, transparent, var(--gold), var(--red), var(--gold), transparent); opacity: .7; }
+
+    section { padding: 78px clamp(20px, 7vw, 100px); scroll-margin-top: 80px; }
+    .section-title { text-align: center; color: var(--gold); font-size: clamp(2rem, 4vw, 3rem); font-style: italic; font-weight: normal; margin-bottom: 10px; }
+    .section-intro { max-width: 720px; margin: 0 auto 38px; text-align: center; color: var(--muted); }
+    .story { background: radial-gradient(ellipse at 80% 50%, rgba(108, 25, 27, .18), transparent 38%), #120d0d; }
+    .story-inner { max-width: 1000px; margin: auto; display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; }
+    .story-copy p { color: var(--muted); margin: 12px 0; }
+    .story-art { min-height: 260px; border: 1px solid var(--line); background: radial-gradient(circle at 50% 25%, rgba(176, 34, 38, .65), transparent 34%), linear-gradient(145deg, #291516, #100b0c 65%); display: grid; place-items: center; position: relative; overflow: hidden; }
+    .story-art::before { content: "鳥居"; color: rgba(217,182,129,.6); font-size: clamp(4rem, 10vw, 7rem); writing-mode: vertical-rl; letter-spacing: .2em; }
+    .world { background: #100c0c; }
+    .cards { max-width: 1100px; margin: 35px auto 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .card { padding: 28px 24px; background: linear-gradient(145deg, #211414, #151010); border: 1px solid #59302c; text-align: center; transition: transform .25s, border-color .25s; }
+    .card:hover { transform: translateY(-5px); border-color: var(--gold); }
+    .card-icon { width: 76px; height: 76px; margin: 0 auto 15px; display: grid; place-items: center; border: 1px solid var(--red); border-radius: 50%; color: var(--gold); font-size: 2.5rem; box-shadow: inset 0 0 20px rgba(166,34,44,.18); }
+    .card h3 { color: var(--gold); font-size: 1.5rem; font-style: italic; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: .98rem; }
+    .rules { background: #191111; }
+    .rule-list { list-style: none; counter-reset: step; max-width: 780px; margin: 30px auto 0; }
+    .rule-list li { counter-increment: step; position: relative; margin: 13px 0; padding: 18px 22px 18px 68px; background: #211616; border-left: 3px solid var(--red); color: var(--muted); }
+    .rule-list li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 20px; top: 17px; color: var(--gold); font-weight: bold; }
+    .rule-list strong { color: var(--paper); }
+    .note { max-width: 780px; margin: 22px auto 0; color: var(--muted); text-align: center; font-size: .92rem; }
+
+    .dice-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 900px; margin: 30px auto 42px; }
+    .dice-card { padding: 25px; text-align: center; background: linear-gradient(145deg, #251717, #171010); border: 1px solid #65302d; }
+    .dice-symbol { display: inline-grid; place-items: center; width: 72px; height: 72px; margin-bottom: 14px; border: 2px solid var(--gold); color: var(--gold); font-size: 1.35rem; font-weight: bold; transform: rotate(-4deg); box-shadow: 0 0 24px rgba(166,34,44,.18); }
+    .dice-card h3, .rules-subtitle, .combat-panel h3 { color: var(--gold); margin-bottom: 10px; font-size: 1.35rem; }
+    .dice-card p { color: var(--muted); }
+    .dice-card strong { color: var(--paper); }
+    .rules-subtitle { text-align: center; margin-top: 10px; }
+    .combat-panel { max-width: 900px; margin: 35px auto 0; padding: 26px; border: 1px solid #6b332f; background: radial-gradient(ellipse at top, rgba(139,31,38,.18), transparent 70%), #171010; }
+    .combat-panel h3 { text-align: center; }
+    .combat-results { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .combat-result { padding: 18px 14px; text-align: center; background: rgba(0,0,0,.18); border-top: 2px solid var(--red); }
+    .result-number { display: block; color: var(--gold); letter-spacing: 2px; font-size: .8rem; margin-bottom: 8px; }
+    .combat-result strong { display: block; color: var(--paper); margin-bottom: 7px; }
+    .combat-result p { color: var(--muted); font-size: .9rem; }
+
+    .project { background: radial-gradient(ellipse at 50% 0%, rgba(123, 28, 30, .18), transparent 55%), #100c0c; }
+    .project-inner { max-width: 850px; margin: auto; text-align: center; }
+    .project-inner > p { color: var(--muted); margin: 12px 0; }
+    .credits { margin-top: 32px; padding: 26px; background: #1b1212; border: 1px solid #59302c; }
+    .credits h3 { color: var(--gold); margin-bottom: 8px; }
+    .credits label { display: block; margin-top: 12px; color: var(--paper); }
+    .credits input { width: min(100%, 380px); padding: 10px 12px; margin-top: 5px; background: #100c0c; color: white; border: 1px solid #68413b; }
+    #mensaje { margin-top: 12px; color: var(--gold); }
+    footer { padding: 28px 18px; text-align: center; border-top: 1px solid var(--red); color: var(--muted); font-size: .9rem; background: #0c0909; }
+    footer span { color: var(--gold); }
+    @keyframes drift { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 760px) {
+      .site-header { gap: 10px; padding: 8px 14px; }
+      .brand { width: 54px; }
+      .brand img { height: 44px; }
+      nav { gap: 7px 12px; font-size: .82rem; }
+      .header-mark { display: none; }
+      .hero { min-height: 78svh; padding: 55px 16px 80px; }
+      .hero-content { padding-top: 70px; }
+      .main-logo { width: min(90vw, 430px); }
+      .torii { top: 18%; height: 170px; }
+      .torii .post { width: 15px; }
+      .dice-panel, .combat-results { grid-template-columns: 1fr; }
+      .combat-panel { padding: 18px; }
+      .story-inner { grid-template-columns: 1fr; }
+      .story-art { min-height: 170px; }
+      .cards { grid-template-columns: 1fr; max-width: 450px; }
+      section { padding: 58px 6%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="KAGE, inicio">
+      <img src="imagenes/logo-kage.jpeg" alt="Logo KAGE: La noche de los yokai">
+    </a>
+    <nav aria-label="Navegación principal">
+      <a href="#inicio">Inicio</a>
+      <a href="#historia">Historia</a>
+      <a href="#mundo">Los Yokai</a>
+      <a href="#juego">Cómo jugar</a>
+      <a href="#proyecto">Proyecto</a>
+    </nav>
+    <span class="header-mark" aria-hidden="true">影</span>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="moon" aria-hidden="true"></div>
+      <div class="torii" aria-hidden="true"><span class="post left"></span><span class="post right"></span></div>
+      <div class="mist" aria-hidden="true"></div>
+      <div class="mountains" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow">Una leyenda de Japón</p>
+        <h1>KAGE: La noche de los yokai</h1>
+        <img class="main-logo" src="imagenes/logo-kage.jpeg" alt="KAGE: La noche de los yokai">
+        <h2>UNA NOCHE FUERA DE LO COMÚN</h2>
+        <p>Cuando cae la noche, los espíritus despiertan. ¿Podrás enfrentarte a las criaturas del folclore japonés y sobrevivir hasta el amanecer?</p>
+        <a class="button" href="#historia">DESCUBRÍ EL JUEGO <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+    <div class="brush-line" aria-hidden="true"></div>
+
+    <section class="story" id="historia">
+      <div class="story-inner">
+        <div class="story-copy">
+          <p class="eyebrow">Historia</p>
+          <h2 class="section-title" style="text-align:left">Una noche fuera de lo común</h2>
+          <p>En KAGE, la frontera entre el mundo humano y el sobrenatural comienza a desaparecer. Durante una noche misteriosa, los yokai salen de las sombras y amenazan con alterar el equilibrio del mundo.</p>
+          <p>Los jugadores deberán explorar, colaborar y tomar decisiones para superar los peligros que acechan en el camino. Cada encuentro es un desafío y cada decisión puede cambiar el destino de la aventura.</p>
+        </div>
+        <div class="story-art" role="img" aria-label="Ilustración decorativa inspirada en un torii japonés al anochecer"></div>
+      </div>
+    </section>
+
+    <section class="world" id="mundo">
+      <h2 class="section-title">Habitantes de la oscuridad</h2>
+      <p class="section-intro">Inspirado en las criaturas sobrenaturales del folclore japonés.</p>
+      <div class="cards">
+        <article class="card"><div class="card-icon" aria-hidden="true">鬼</div><h3>Oni</h3><p>Criaturas temibles que representan la fuerza y el peligro. Un desafío para cualquier aventurero.</p></article>
+        <article class="card"><div class="card-icon" aria-hidden="true">狐</div><h3>Kitsune</h3><p>Espíritus con forma de zorro, conocidos por su astucia y sus poderes sobrenaturales.</p></article>
+        <article class="card"><div class="card-icon" aria-hidden="true">幽</div><h3>Yurei</h3><p>Espíritus ligados a antiguas historias, misterios y lugares envueltos en sombras.</p></article>
+      </div>
+    </section>
+
+    <section class="rules" id="juego">
+      <p class="eyebrow">Reglamento</p>
+      <h2 class="section-title">¿Cómo se juega?</h2>
+      <p class="section-intro">Avanzá por el tablero, descubrí bendiciones o desgracias y enfrentá a los jefes que acechan en la noche.</p>
+
+      <div class="dice-panel">
+        <article class="dice-card">
+          <div class="dice-symbol" aria-hidden="true">D4</div>
+          <h3>Dado de movimiento</h3>
+          <p>Usá el dado de <strong>4 caras</strong> para determinar cuántas casillas avanzás en tu turno.</p>
+        </article>
+        <article class="dice-card">
+          <div class="dice-symbol" aria-hidden="true">D20</div>
+          <h3>Dado de combate</h3>
+          <p>Usá el dado de <strong>20 caras</strong> cuando te enfrentes a un boss para resolver el combate.</p>
+        </article>
+      </div>
+
+      <h3 class="rules-subtitle">Reglas de la aventura</h3>
+      <ol class="rule-list">
+        <li><strong>Avanzá por el tablero.</strong><br>En tu turno, tirá el dado de 4 caras y mové tu personaje la cantidad de casillas indicada.</li>
+        <li><strong>Bendiciones y desgracias.</strong><br>Algunas casillas pueden otorgarte una bendición beneficiosa o desatar una desgracia. ¡Preparáte para lo inesperado!</li>
+        <li><strong>Compartí el desafío.</strong><br>Varios jugadores pueden coincidir en una misma casilla y enfrentarse juntos al mismo boss. Sin embargo, cada jugador puede terminar con un destino diferente.</li>
+        <li><strong>Tus cartas son personales.</strong><br>Cada carta de bendición o desgracia pertenece únicamente al jugador que la obtiene. Sus efectos no se comparten automáticamente con los demás.</li>
+        <li><strong>Enfrentamiento contra los bosses.</strong><br>Tirá el dado de 20 caras y compará el resultado con el valor del boss: si sacás un número menor, perdés 1 vida; si sacás el mismo número, perdés un turno; si sacás un número mayor, derrotás al boss y podés avanzar.</li>
+      </ol>
+
+      <div class="combat-panel">
+        <h3>Resolución del combate</h3>
+        <div class="combat-results">
+          <div class="combat-result"><span class="result-number">MENOR</span><strong>Perdés 1 vida</strong><p>Tu tirada queda por debajo del valor del boss.</p></div>
+          <div class="combat-result"><span class="result-number">IGUAL</span><strong>Perdés un turno</strong><p>No lográs superar al boss en este intento.</p></div>
+          <div class="combat-result"><span class="result-number">MAYOR</span><strong>Derrotás al boss</strong><p>Superás su valor y podés avanzar.</p></div>
+        </div>
+      </div>
+      <p class="note">Estas reglas describen la mecánica indicada para KAGE. Podés ampliar esta sección cuando definas más detalles del reglamento.</p>
+    </section>
+
+    <section class="project" id="proyecto">
+      <div class="project-inner">
+        <h2 class="section-title">El proyecto KAGE</h2>
+        <p>KAGE: La noche de los yokai es un proyecto de juego de mesa inspirado en la cultura y el folclore japonés. Busca combinar narrativa, exploración, estrategia y cooperación en una experiencia compartida.</p>
+        <p>Esta página presenta la identidad del juego, su ambientación y sus principales características.</p>
+        <div class="credits">
+          <h3>Ficha del proyecto</h3>
+          <p>Completá estos datos antes de presentar el trabajo.</p>
+          <label for="autor">Autor o autores</label><input id="autor" type="text" placeholder="Escribí tu nombre">
+          <label for="institucion">Institución educativa</label><input id="institucion" type="text" placeholder="Nombre de la escuela">
+          <label for="materia">Materia</label><input id="materia" type="text" placeholder="Nombre de la materia">
+          <p style="margin-top:18px"><button class="button" id="guardar" type="button">Comprobar ficha</button></p>
+          <p id="mensaje" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><p><span>KAGE</span> — La noche de los yokai</p><p>Proyecto de juego de mesa · <span id="anio"></span></p></footer>
+  <script>
+    document.getElementById('anio').textContent = new Date().getFullYear();
+    document.getElementById('guardar').addEventListener('click', () => {
+      const autor = document.getElementById('autor').value.trim();
+      const institucion = document.getElementById('institucion').value.trim();
+      const materia = document.getElementById('materia').value.trim();
+      const mensaje = document.getElementById('mensaje');
+      if (!autor || !institucion || !materia) {
+        mensaje.textContent = 'Completá los tres campos para tener lista la ficha.';
+        mensaje.style.color = '#e5b86f';
+      } else {
+        mensaje.textContent = '¡Ficha completada! Estos datos solo se muestran en esta sesión; no se envían ni se guardan en un servidor.';
+        mensaje.style.color = '#c3d8a2';
+      }
+    });
+  </script>
+</body>
+</html>
